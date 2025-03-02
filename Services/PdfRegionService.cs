@@ -51,6 +51,13 @@ namespace CtrInvoice.Services
             return new PdfRectangle(0, 95, pageWidth, pageHeight);
         }
         
+        // Gets the search region for BMCD draft invoice as a rectangle.
+        public PdfRectangle GetInvoiceRegion(double pageWidth, double pageHeight, int pageRotation, 
+            double x1_min, double y1_min, double x2_max, double y2_max)
+        {
+            return new PdfRectangle(0, 0, pageWidth, pageHeight);
+        }
+        
         // Method to get a function reference based on user input
         public PdfRectangle GetRegionByName(string regionName, double pageWidth, double pageHeight, int pageRotation, 
             double x1_min, double y1_min, double x2_max, double y2_max)
@@ -61,7 +68,8 @@ namespace CtrInvoice.Services
                 { "FULL", GetFullPageRegion },
                 { "BOW", GetBowRegion },
                 { "TITLE", GetDwgTitleRegion },
-                { "DWG", GetDwgRegion }
+                { "DWG", GetDwgRegion },
+                { "INVOICE", GetInvoiceRegion }
             };
 
             if (regionMap.TryGetValue(regionName, out var regionFunc))

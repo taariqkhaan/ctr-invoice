@@ -1,0 +1,32 @@
+﻿Console.WriteLine($"{}");
+
+ if (wordValue == "IN")
+    {
+        return "TD-IN";
+    }
+    if (wordValue == "KY" || wordValue == "OH")
+    {
+        return "TD-KY-OH";
+    }
+    if (wordValue == "NC" || wordValue == "SC")
+    {
+        return "TD-NC-SC";
+    }
+    if (wordValue == "FL")
+    {
+        return "TD-FL";
+    }
+    
+    
+ write a program in c#. .net 8.0, 
+ that reads an .xlsx or .xls file.
+ extracts data from specific cells and manipulate it.
+ write backs to some other cells.
+ saves it in the same folder with name updated_CTR.xlsx
+ 
+ namespace CtrInvoice.Services;
+ 
+ public class DukeCtrService
+ {
+     
+ }

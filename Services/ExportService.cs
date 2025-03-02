@@ -28,8 +28,11 @@ namespace CtrInvoice.Services
 {
     public class ExportService
     {
-        public void SaveToCsv(List<PdfTextModel> extractedText, string outputCsvPath)
+        public void SaveToCsv(List<PdfTextModel> extractedText, string filePath)
         {
+            string outputCsvPath = Path.Combine(Path.GetDirectoryName(filePath), 
+                Path.GetFileNameWithoutExtension(filePath) + ".csv");
+            
             if (extractedText == null || extractedText.Count == 0)
             {
                 throw new ArgumentException("Extracted text list is null or empty.", nameof(extractedText));

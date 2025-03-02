@@ -34,13 +34,13 @@ namespace CtrInvoice.ViewModels
     {
         private bool _isEnabled = true;
         
-        private string _bowPath;
-        private string _drawingsPath;
+        private string _ntpPath;
+        private string _ctrPath;
+        private string _invoicePath;
 
-        private bool _qualityCheck;
-        private bool _cableSummary;
+        private bool _generateCtr;
+        private bool _testCheckBox;
         private bool _cableDetails;
-        private bool _test1;
         private bool _isRotateVerticalDrawings;
         private bool _isRevertVerticalDrawings;
         private bool _isNoRotationDrawings = true;
@@ -51,7 +51,7 @@ namespace CtrInvoice.ViewModels
         private Stopwatch stopwatch;
         private string _statusMessage;
         private bool qualityChecked = false;
-        private bool definedException = false;
+        private bool customException = false;
         string dbPath = Path.Combine(Path.GetTempPath(), "data.db");
         
         
@@ -60,15 +60,20 @@ namespace CtrInvoice.ViewModels
             get => _isEnabled;
             set { _isEnabled = value; OnPropertyChanged(nameof(IsEnabled)); }
         }
-        public string BowPath
+        public string ntpPath
         {
-            get => _bowPath;
-            set { _bowPath = value; OnPropertyChanged(nameof(BowPath)); }
+            get => _ntpPath;
+            set { _ntpPath = value; OnPropertyChanged(nameof(ntpPath)); }
         }
-        public string DrawingsPath
+        public string ctrPath
         {
-            get => _drawingsPath;
-            set { _drawingsPath = value; OnPropertyChanged(nameof(DrawingsPath)); }
+            get => _ctrPath;
+            set { _ctrPath = value; OnPropertyChanged(nameof(ctrPath)); }
+        }
+        public string invoicePath
+        {
+            get => _invoicePath;
+            set { _invoicePath = value; OnPropertyChanged(nameof(invoicePath)); }
         }
         public string StatusMessage
         {
@@ -79,23 +84,23 @@ namespace CtrInvoice.ViewModels
                 OnPropertyChanged(nameof(StatusMessage));
             }
         }
-        public bool QualityCheck
+        public bool GenerateCtr
         {
-            get => _qualityCheck;
+            get => _generateCtr;
             set
             {
-                _qualityCheck = value;
-                OnPropertyChanged(nameof(QualityCheck));
+                _generateCtr = value;
+                OnPropertyChanged(nameof(GenerateCtr));
                 ((RelayCommand)ProcessCommand).RaiseCanExecuteChanged();
             }
         }
-        public bool CableSummary
+        public bool TestCheckBox
         {
-            get => _cableSummary;
+            get => _testCheckBox;
             set
             {
-                _cableSummary = value;
-                OnPropertyChanged(nameof(CableSummary));
+                _testCheckBox = value;
+                OnPropertyChanged(nameof(TestCheckBox));
                 ((RelayCommand)ProcessCommand).RaiseCanExecuteChanged();
             }
         }
@@ -142,40 +147,53 @@ namespace CtrInvoice.ViewModels
             }
         }
 
-        public ICommand BrowseBowCommand { get; }
-        public ICommand BrowseDrawingsCommand { get; }
+        public ICommand BrowseNtpCommand { get; }
+        public ICommand BrowseCtrCommand { get; }
+        public ICommand BrowseInvoiceCommand { get; }
         public ICommand ProcessCommand { get; }
 
         public MainWindowViewModel()
         {
-            BrowseBowCommand = new RelayCommand(BrowseBow);
-            BrowseDrawingsCommand = new RelayCommand(BrowseDrawings);
+            BrowseNtpCommand = new RelayCommand(BrowseNtp);
+            BrowseCtrCommand = new RelayCommand(BrowseCtr);
+            BrowseInvoiceCommand = new RelayCommand(BrowseInvoice);
             ProcessCommand = new RelayCommand(async () => await Process(), 
-                () => IsEnabled && (QualityCheck || CableSummary));
+                () => IsEnabled && (GenerateCtr || TestCheckBox));
         }
 
-        private void BrowseBow()
+        private void BrowseNtp()
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Title = "Select a bill of wire PDF binder";
-                openFileDialog.Filter = "PDF Files (*.pdf)|*.pdf";
+                openFileDialog.Title = "Select Duke NTP spreadsheet";
+                openFileDialog.Filter = "Excel Files (*.xlsx, *.xls)|*.xlsx;*.xls";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    BowPath = openFileDialog.FileName;
+                    ntpPath = openFileDialog.FileName;
                 }
             }
         }
-        
-        private void BrowseDrawings()
+        private void BrowseCtr()
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Title = "Select a Drawings PDF binder";
+                openFileDialog.Title = "Select Duke CTR spreadsheet";
+                openFileDialog.Filter = "Excel Files (*.xlsx, *.xls)|*.xlsx;*.xls";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    ctrPath = openFileDialog.FileName;
+                }
+            }
+        }
+        private void BrowseInvoice()
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "Select BMCD draft invoice PDF";
                 openFileDialog.Filter = "PDF Files (*.pdf)|*.pdf";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    DrawingsPath = openFileDialog.FileName;
+                    invoicePath = openFileDialog.FileName;
                 }
             }
         }
@@ -190,21 +208,27 @@ namespace CtrInvoice.ViewModels
             IsEnabled = false;
             StatusMessage = "Processing started...";
             
-            if (string.IsNullOrEmpty(BowPath))
+            if (string.IsNullOrEmpty(ntpPath))
             {
-                StatusMessage = "Please select Bill of Wire PDF.";
-                IsEnabled = true;
-                return;
+                // StatusMessage = "Please Duke NTP spreadsheet.";
+                // IsEnabled = true;
+                // return;
             }
-            if (string.IsNullOrEmpty(DrawingsPath))
+            if (string.IsNullOrEmpty(ctrPath))
             {
-                StatusMessage = "Please select Drawings PDF.";
-                IsEnabled = true;
-                return;
+                // StatusMessage = "Please Duke CTR spreadsheet.";
+                // IsEnabled = true;
+                // return;
+            }
+            if (string.IsNullOrEmpty(invoicePath))
+            {
+                // StatusMessage = "Please select BMCD draft invoice PDF.";
+                // IsEnabled = true;
+                // return;
             }
             
-            //-----------------------Check quality----------------------------------------------------------------------
-            if (QualityCheck)
+            //-------------------------------------------------Generate CTR---------------------------------------------
+            if (GenerateCtr)
             {
                 //------------------------------------Delete previously generated database file-------------------------
                 if (File.Exists(dbPath))
@@ -222,207 +246,203 @@ namespace CtrInvoice.ViewModels
                 //------------------------------------------------------------------------------------------------------
                 
                 
-                
-                //---------------------------------------Extract text from cable schedule-------------------------------
-                StatusMessage = "Processing cable schedule...";
-                documentType = "BOW";
+                //-----------------------------------Extract text from BMCD Draft Invoice-------------------------------
+                StatusMessage = "Processing BMCD invoice...";
+                documentType = "INVOICE";
                 var result = await Task.Run(() =>
                 {
                     PdfTextService pdfTextService = new PdfTextService();
-                    return pdfTextService.ExtractTextAndCoordinates(BowPath, documentType);
+                    return pdfTextService.ExtractTextAndCoordinates(invoicePath, documentType);
                 });
-                List<PdfTextModel> extractedBowData = result.ExtractedText;
+                List<PdfTextModel> extractedInvoiceData = result.ExtractedText;
                 
                 // Save text to database
                 ExportService exportService = new ExportService();
-                await exportService.SaveToDatabase(extractedBowData, dbPath, documentType);
-                // exportService.SaveToCsv(extractedBowData, Path.Combine(Path.GetDirectoryName(BowPath), 
-                //     Path.GetFileNameWithoutExtension(BowPath) + ".csv"));
+                await exportService.SaveToDatabase(extractedInvoiceData, dbPath, documentType);
+                //exportService.SaveToCsv(extractedInvoiceData, invoicePath);
 
                 // Add tags to relevant texts
                 await Task.Run(() =>
                 {
-                    CableScheduleService cableScheduleService = new CableScheduleService();
-                    cableScheduleService.ProcessDatabase(dbPath);
+                    BmcdInvoiceService bmcdInvoiceService = new BmcdInvoiceService();
+                    bmcdInvoiceService.ProcessDatabase(dbPath);
                 });
                 //------------------------------------------------------------------------------------------------------
                 
                 
                 
-               //---------------------------------------Extract text from title block-----------------------------------
-               StatusMessage = "Processing drawings...";
-               documentType = "TITLE";
-                result = await Task.Run(() =>
-                {
-                    PdfTextService pdfTextService = new PdfTextService();
-                    return pdfTextService.ExtractTextAndCoordinates(DrawingsPath, documentType);
-                });
-                List<PdfTextModel> extractedTitleData = result.ExtractedText;
-                
-                
-                documentType = "DWG";
-                // Save text to database
-                exportService = new ExportService();
-                await exportService.SaveToDatabase(extractedTitleData, dbPath, documentType);
-                // exportService.SaveToCsv(extractedTitleData, Path.Combine(Path.GetDirectoryName(DrawingsPath), 
-                //     Path.GetFileNameWithoutExtension(DrawingsPath) + ".csv"));
-                
-                // Add tags to relevant texts
-                await Task.Run(() =>
-                {
-                    DwgTitleService dwgTitleService = new DwgTitleService();
-                    dwgTitleService.ProcessDatabase(dbPath);
-                });
+                //-------------------------------Generate CTR-----------------------------------------------------------
+                DukeCtrService dukeCtrService = new DukeCtrService();
+                dukeCtrService.GenerateCtr(ctrPath, dbPath);
                 //------------------------------------------------------------------------------------------------------
                 
                 
                 
                 //-------------------------------highlight region in a pdf----------------------------------------------
                 // RegionHighlightService regionHighlightService = new RegionHighlightService();
-                // regionHighlightService.HighlightRegion(DrawingsPath, "TITLE");
+                // regionHighlightService.HighlightRegion(invoicePath, "INVOICE");
                 //------------------------------------------------------------------------------------------------------
                 
                 
-                
-                 //---------------------------------------Extract text from drawing area--------------------------------
-                 result = await Task.Run(() =>
-                 {
-                     PdfTextService pdfTextService = new PdfTextService();
-                     return pdfTextService.ExtractTextAndCoordinates(DrawingsPath, documentType);
-                 });
-                 List<PdfTextModel> extractedDwgData = result.ExtractedText;
-                 verticalPages = result.VerticalPages;
-                
-                 // Save text to database
-                 exportService = new ExportService();
-                 await exportService.SaveToDatabase(extractedDwgData, dbPath, documentType);
-                 // exportService.SaveToCsv(extractedBowData, Path.Combine(Path.GetDirectoryName(BowPath), 
-                 //     Path.GetFileNameWithoutExtension(BowPath) + ".csv"));
-                
-                 // Add tags to relevant texts
-                 await Task.Run(() =>
-                 {
-                     DrawingService drawingService = new DrawingService();
-                     drawingService.ProcessDatabase(dbPath);
-                 });
-                 //-----------------------------------------------------------------------------------------------------
-                 
-                 
-                 
-                 //----------------------------Compare cable schedule to drawings---------------------------------------
-                 StatusMessage = "Comparing cable schedule to drawings...";
-                 ComparisonLogic comparisonLogic = new ComparisonLogic();
-                 comparisonLogic.CompareDatabase(dbPath);
-                 //-----------------------------------------------------------------------------------------------------
-                 
-                 
-                 
-                 //--------------------------Annotate DWG and BOW-------------------------------------------------------
-                 string outputBowPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(BowPath), 
-                     $"highlighted_BOW.pdf");
-                 string outputDwgPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(DrawingsPath), 
-                     $"highlighted_DWG.pdf");
-
-                 try
-                 {
-                     // Check "highlighted_BOW.pdf"
-                     if (File.Exists(outputBowPath))
-                     {
-                         // If it exists, ensure it’s not open
-                         FileIsAccessible(outputBowPath);
-                         Console.WriteLine("BOW PDF exists and is accessible.");
-                     }
-                     // Check "highlighted_DWG.pdf"
-                     if (File.Exists(outputDwgPath))
-                     {
-                         // If it exists, ensure it’s not open
-                         FileIsAccessible(outputDwgPath);
-                         Console.WriteLine("DWG PDF exists and is accessible.");
-                     }
-                     
-                     AnnotationService annotationService = new AnnotationService();
-                     annotationService.AnnotatePdf(BowPath, dbPath,"BOW");
-                     annotationService.AnnotatePdf(DrawingsPath, dbPath, "DWG");
-                 }
-                 catch (IOException)
-                 {
-                     StatusMessage = "Highlighted PDFs are open! Close PDFs before continuing.";
-                     File.Delete(dbPath);
-                     IsEnabled = true;
-                     definedException = false;
-                     return;
-                 }
-                 //------------------------------------------------------------------------------------------------------
-                 
-                 
-                 
-                 //----------------------------Create hyperlinks--------------------------------------------------------
-                 StatusMessage = "Creating hyperlinks...";
-                 HyperlinkService hyperlinkService = new HyperlinkService();
-                 hyperlinkService.HyperlinkMain(dbPath, BowPath);
-                 //-----------------------------------------------------------------------------------------------------
-                 
-                 
-            
-                 //-----------------------Add keymarks to the cable schedule----------------------------------------
-                 CableDetailsService cableDetailsService = new CableDetailsService();
-                 cableDetailsService.ProcessDatabase(dbPath, BowPath);
-                 //-----------------------------------------------------------------------------------------------------
-                 
-                 
-                 
-                 //-----------------------Rotation of vertical drawings--------------------------------------------------
-                 if (IsRotateVerticalDrawings)
-                 {
-                     StatusMessage = "Rotating vertical drawings...";
-                     PdfRotationService pdfRotationService = new PdfRotationService();
-                     pdfRotationService.RotatePdfPages(DrawingsPath, verticalPages);
-                     definedException = false;
-                 }
-                 if (IsRevertVerticalDrawings)
-                 {
-                     StatusMessage = "Reverting vertical drawings rotation...";
-                     PdfRotationService pdfRotationService = new PdfRotationService();
-                     pdfRotationService.RevertRotations(DrawingsPath);
-                     definedException = false;
-                 }
-                 if (IsNoRotationDrawings)
-                 {
-                     StatusMessage = "Skipping vertical drawings rotation...";
-                     Console.WriteLine($"Vertical pages rotation skipped");
-                     definedException = false;
-                 }
-                 //-----------------------------------------------------------------------------------------------------
-                 
+               // //---------------------------------------Extract text from title block-----------------------------------
+               // StatusMessage = "Processing drawings...";
+               // documentType = "TITLE";
+               //  result = await Task.Run(() =>
+               //  {
+               //      PdfTextService pdfTextService = new PdfTextService();
+               //      return pdfTextService.ExtractTextAndCoordinates(ctrPath, documentType);
+               //  });
+               //  List<PdfTextModel> extractedTitleData = result.ExtractedText;
+               //  
+               //  
+               //  documentType = "DWG";
+               //  // Save text to database
+               //  exportService = new ExportService();
+               //  await exportService.SaveToDatabase(extractedTitleData, dbPath, documentType);
+               //  // exportService.SaveToCsv(extractedTitleData, Path.Combine(Path.GetDirectoryName(DrawingsPath), 
+               //  //     Path.GetFileNameWithoutExtension(DrawingsPath) + ".csv"));
+               //  
+               //  // Add tags to relevant texts
+               //  await Task.Run(() =>
+               //  {
+               //      DwgTitleService dwgTitleService = new DwgTitleService();
+               //      dwgTitleService.ProcessDatabase(dbPath);
+               //  });
+               //  //------------------------------------------------------------------------------------------------------
+               //  
+               //  
+               //  
+               //  
+               //  
+               //  
+               //   //---------------------------------------Extract text from drawing area--------------------------------
+               //   result = await Task.Run(() =>
+               //   {
+               //       PdfTextService pdfTextService = new PdfTextService();
+               //       return pdfTextService.ExtractTextAndCoordinates(ctrPath, documentType);
+               //   });
+               //   List<PdfTextModel> extractedDwgData = result.ExtractedText;
+               //   verticalPages = result.VerticalPages;
+               //  
+               //   // Save text to database
+               //   exportService = new ExportService();
+               //   await exportService.SaveToDatabase(extractedDwgData, dbPath, documentType);
+               //   // exportService.SaveToCsv(extractedBowData, Path.Combine(Path.GetDirectoryName(BowPath), 
+               //   //     Path.GetFileNameWithoutExtension(BowPath) + ".csv"));
+               //  
+               //   // Add tags to relevant texts
+               //   await Task.Run(() =>
+               //   {
+               //       DrawingService drawingService = new DrawingService();
+               //       drawingService.ProcessDatabase(dbPath);
+               //   });
+               //   //-----------------------------------------------------------------------------------------------------
+               //   
+               //   
+               //   
+               //   //----------------------------Compare cable schedule to drawings---------------------------------------
+               //   StatusMessage = "Comparing cable schedule to drawings...";
+               //   ComparisonLogic comparisonLogic = new ComparisonLogic();
+               //   comparisonLogic.CompareDatabase(dbPath);
+               //   //-----------------------------------------------------------------------------------------------------
+               //   
+               //   
+               //   
+               //   //--------------------------Annotate DWG and BOW-------------------------------------------------------
+               //   string outputBowPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ntpPath), 
+               //       $"highlighted_BOW.pdf");
+               //   string outputDwgPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ctrPath), 
+               //       $"highlighted_DWG.pdf");
+               //
+               //   try
+               //   {
+               //       // Check "highlighted_BOW.pdf"
+               //       if (File.Exists(outputBowPath))
+               //       {
+               //           // If it exists, ensure it’s not open
+               //           FileIsAccessible(outputBowPath);
+               //           Console.WriteLine("BOW PDF exists and is accessible.");
+               //       }
+               //       // Check "highlighted_DWG.pdf"
+               //       if (File.Exists(outputDwgPath))
+               //       {
+               //           // If it exists, ensure it’s not open
+               //           FileIsAccessible(outputDwgPath);
+               //           Console.WriteLine("DWG PDF exists and is accessible.");
+               //       }
+               //       
+               //       AnnotationService annotationService = new AnnotationService();
+               //       annotationService.AnnotatePdf(ntpPath, dbPath,"BOW");
+               //       annotationService.AnnotatePdf(ctrPath, dbPath, "DWG");
+               //   }
+               //   catch (IOException)
+               //   {
+               //       StatusMessage = "Highlighted PDFs are open! Close PDFs before continuing.";
+               //       File.Delete(dbPath);
+               //       IsEnabled = true;
+               //       customException = false;
+               //       return;
+               //   }
+               //   //------------------------------------------------------------------------------------------------------
+               //   
+               //   
+               //   
+               //   //----------------------------Create hyperlinks--------------------------------------------------------
+               //   StatusMessage = "Creating hyperlinks...";
+               //   HyperlinkService hyperlinkService = new HyperlinkService();
+               //   hyperlinkService.HyperlinkMain(dbPath, ntpPath);
+               //   //-----------------------------------------------------------------------------------------------------
+               //   
+               //   
+               //
+               //   //-----------------------Add keymarks to the cable schedule----------------------------------------
+               //   CableDetailsService cableDetailsService = new CableDetailsService();
+               //   cableDetailsService.ProcessDatabase(dbPath, ntpPath);
+               //   //-----------------------------------------------------------------------------------------------------
+               //   
+               //   
+               //   
+               //   //-----------------------Rotation of vertical drawings--------------------------------------------------
+               //   if (IsRotateVerticalDrawings)
+               //   {
+               //       StatusMessage = "Rotating vertical drawings...";
+               //       PdfRotationService pdfRotationService = new PdfRotationService();
+               //       pdfRotationService.RotatePdfPages(ctrPath, verticalPages);
+               //       customException = false;
+               //   }
+               //   if (IsRevertVerticalDrawings)
+               //   {
+               //       StatusMessage = "Reverting vertical drawings rotation...";
+               //       PdfRotationService pdfRotationService = new PdfRotationService();
+               //       pdfRotationService.RevertRotations(ctrPath);
+               //       customException = false;
+               //   }
+               //   if (IsNoRotationDrawings)
+               //   {
+               //       StatusMessage = "Skipping vertical drawings rotation...";
+               //       Console.WriteLine($"Vertical pages rotation skipped");
+               //       customException = false;
+               //   }
+               //   //-----------------------------------------------------------------------------------------------------
+               //   
                  
                 qualityChecked = true;
-                definedException = false;
+                customException = false;
             }
             //----------------------------------------------------------------------------------------------------------
             
             
             
-            //-----------------------Generate Cable summary-------------------------------------------------------------
-            if (CableSummary)
+            //-----------------------Testing----------------------------------------------------------------------------
+            if (TestCheckBox)
             {
-                if (qualityChecked && File.Exists(dbPath))
-                {
-              
-                    CableSummaryService  cableSummaryService = new  CableSummaryService();
-                    cableSummaryService.GenerateCableSummaryCsv(dbPath, BowPath);
-                    definedException = false;
-                }
-                else
-                {
-                    StatusMessage = "Run quality check !!";
-                    definedException = true;
-                }
+                
             }
             //----------------------------------------------------------------------------------------------------------
             
             
             
-            if (!definedException)
+            if (!customException)
             {
                 StatusMessage = "Processing success!";
             }

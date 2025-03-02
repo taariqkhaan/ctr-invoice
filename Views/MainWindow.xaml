@@ -29,20 +29,21 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Label and TextBox bill of wire -->
+        <!-- Label and TextBox for NTP -->
         <TextBlock Grid.Row="0" 
                    Grid.Column="0" 
                    Margin="5"
                    FontSize="14"
-                   Text="Bill of Wire PDF:"/>
+                   Text="Duke Notice to Proceed (NTP) Spreadsheet:"/>
         <TextBox Grid.Row="1" 
                  Grid.Column="0" 
                  Margin="5"
                  Padding="5" 
                  FontSize="14"
-                 Text="{Binding BowPath, Mode=TwoWay}"/>
+                 Text="{Binding ntpPath, Mode=TwoWay}"/>
         <Button Grid.Row="1" 
                 Grid.Column="1" 
                 Width="40"
@@ -50,20 +51,20 @@
                 Padding="5"
                 FontSize="14"
                 Content="..." 
-                Command="{Binding BrowseBowCommand}"/>
+                Command="{Binding BrowseNtpCommand}"/>
 
-        <!-- Label and TextBox for drawings -->
+        <!-- Label and TextBox for CTR -->
         <TextBlock Grid.Row="2" 
                    Grid.Column="0" 
                    Margin="5"
                    FontSize="14"
-                   Text="Drawings PDF:"/>
+                   Text="Duke (CTR) Template Spreadsheet:"/>
         <TextBox Grid.Row="3" 
                  Grid.Column="0" 
                  Margin="5"
                  Padding="5" 
                  FontSize="14"
-                 Text="{Binding DrawingsPath, Mode=TwoWay}"/>
+                 Text="{Binding ctrPath, Mode=TwoWay}"/>
         <Button Grid.Row="3" 
                 Grid.Column="1" 
                 Width="40"
@@ -71,38 +72,59 @@
                 Padding="5"
                 FontSize="14"
                 Content="..." 
-                Command="{Binding BrowseDrawingsCommand}"/>
+                Command="{Binding BrowseCtrCommand}"/>
+        
+        <!-- Label and TextBox for BMCD draft invoice -->
+        <TextBlock Grid.Row="4" 
+                   Grid.Column="0" 
+                   Margin="5"
+                   FontSize="14"
+                   Text="BMCD Draft Invoice PDF:"/>
+        <TextBox Grid.Row="5" 
+                 Grid.Column="0" 
+                 Margin="5"
+                 Padding="5" 
+                 FontSize="14"
+                 Text="{Binding invoicePath, Mode=TwoWay}"/>
+        <Button Grid.Row="5" 
+                Grid.Column="1" 
+                Width="40"
+                Margin="5"
+                Padding="5"
+                FontSize="14"
+                Content="..." 
+                Command="{Binding BrowseInvoiceCommand}"/>
         
         <!-- Checkboxes Section -->
-        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
-            <CheckBox Content="Perform Quality Check" 
+        <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
+            <CheckBox Content="Generate CTR" 
                       FontSize="14" Margin="5"
-                      IsChecked="{Binding QualityCheck, Mode=TwoWay}"/>
-            <CheckBox Content="Generate Cable Summary"
+                      IsChecked="{Binding GenerateCtr, Mode=TwoWay}"/>
+            <CheckBox Content="Test"
                       FontSize="14" Margin="5"
-                      IsChecked="{Binding CableSummary, Mode=TwoWay}"/>
+                      IsChecked="{Binding TestCheckBox, Mode=TwoWay}"/>
         </StackPanel>
         
         <!-- Rotate/Revert Rotation Radio Buttons -->
-        <GroupBox Header="Vertical Drawings Rotation" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
+        <GroupBox Header="Vertical Drawings Rotation" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
             <StackPanel>
                 <RadioButton Content="Rotate Drawings"
                              FontSize="14" Margin="5"
-                             IsEnabled="{Binding QualityCheck}"
+                             IsEnabled="{Binding GenerateCtr}"
                              IsChecked="{Binding IsRotateVerticalDrawings, Mode=TwoWay}"/>
                 <RadioButton Content="Revert Rotation"
                              FontSize="14" Margin="5"
-                             IsEnabled="{Binding QualityCheck}"
+                             IsEnabled="{Binding GenerateCtr}"
                              IsChecked="{Binding IsRevertVerticalDrawings, Mode=TwoWay}"/>
                 <RadioButton Content="Do Not Rotate"
                              FontSize="14" Margin="5"
-                             IsEnabled="{Binding QualityCheck}"
+                             IsEnabled="{Binding GenerateCtr}"
                              IsChecked="{Binding IsNoRotationDrawings, Mode=TwoWay}"/>
             </StackPanel>
         </GroupBox>
         
         <!-- Process Button -->
-        <Button Grid.Row="6" 
+        <Button Grid.Row="8" 
                 Grid.Column="0" 
                 Grid.ColumnSpan="2"
                 Width="150"
@@ -114,13 +136,13 @@
                 Content="Process" 
                 Command="{Binding ProcessCommand}"/>
         
-        <TextBlock Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2"
+        <TextBlock Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"
                    Margin="5" Padding="5"
                    FontSize="14"
                    Foreground="Green"
                    Text="{Binding StatusMessage}"
                    HorizontalAlignment="Center"/>
-        <TextBlock Grid.Row="8" Grid.Column="0"
+        <TextBlock Grid.Row="10" Grid.Column="0"
                    Margin="5" Padding="2"
                    FontSize="12"
                    Text="Version: 1.0.0"
